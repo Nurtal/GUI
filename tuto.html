@@ -3,6 +3,8 @@
         <meta charset="utf-8">
         <title>D3 Test</title>
         <script type="text/javascript" src="d3.v3.min.js"></script>
+        <script type="text/javascript" src="jquery-3.2.0.min.js"></script>
+        <script type="text/javascript" src="underscore-min.js"></script>
     </head>
 
     <style>
@@ -23,20 +25,7 @@
         <script type="text/javascript">
             alert("This is Tutorial");
 
-            d3.select("body").append("p").text("New paragraph!");
-            var dataset = [ 5, 10, 15, 20, 25 ];
-            d3.select("body").selectAll("p")
-                .data(dataset)
-                .enter()
-                .append("p")
-                .text(function(d) { return d; })
-                .style("color", function(d) {
-                    if (d > 15) {   // Seuil de 15
-                        return "red";
-                    } else {
-                        return "black";
-                    }
-                });
+            
 
 
             //Width and height
@@ -103,6 +92,7 @@
 
 
             var nodes = svg.selectAll("circle")
+                .attr("class", "node")
                 .data(dataset.nodes)
                 .enter()
                 .append("circle")
@@ -111,6 +101,50 @@
                     return colors(i);
                 })
                 .call(force.drag);
+
+
+            var update = function () {
+
+                // update force field
+                force.nodes(dataset.nodes);
+                force.links(dataset.edges);
+                force.linkDistance([50]);
+                force.charge([-100]);
+                force.size([w, h]);
+                force.start();
+
+                // update nodes
+                var new_nodes = svg.selectAll("circle").data(dataset.nodes);
+                new_nodes.enter().append("circle");
+                new_nodes.exit().remove();
+                new_nodes
+                    .attr("class", "node")
+                    .attr("r", 10)
+                    .call(force.drag);
+                
+                //update edges
+                var new_edges = svg.selectAll("line").data(dataset.edges);
+                new_edges.enter().append("line");
+                new_edges.exit().remove();
+                new_edges
+                    .style("stroke", "#ccc")
+                    .style("stroke-width", 1);
+
+
+                // update coordinates
+                force.on("tick", function() {
+
+                    new_edges.attr("x1", function(d) { return d.source.x; })
+                        .attr("y1", function(d) { return d.source.y; })
+                        .attr("x2", function(d) { return d.target.x; })
+                        .attr("y2", function(d) { return d.target.y; });
+
+                    new_nodes.attr("cx", function(d) { return d.x; })
+                        .attr("cy", function(d) { return d.y; });
+
+                });
+
+            };
 
 
             force.on("tick", function() {
@@ -126,93 +160,25 @@
             });
 
 
-            
 
             d3.select("circle")
                 .on("click", function() {
                     //Do something mundane and annoying on click
                     alert(" Tadam");
-                    nodes_new = dataset.nodes;
-                    edge_news = dataset.edges;
-
-                    node_add1 = { name: "Kaiden" };
-                    node_add2 = { name: "Ash" };
-                    node_add3 = { name: "Shepard" };
-                    node_add4 = { name: "Modrin" };
-                    node_add5 = { name: "Archangel" };
-                    truc2 = { source: 4, target: 11 }
                     
-                    nodes_new.push(node_add1);
-                    nodes_new.push(node_add2);
-                    nodes_new.push(node_add3);
-                    nodes_new.push(node_add4);
-                    nodes_new.push(node_add5);
+                    dataset.nodes.push({"name": "test"});
+                    dataset.nodes.push({"name": "test2"});
+                    dataset.edges.push({ source: 0, target: 11 });
 
-                    edge_news.push(truc2);
+                    update();
 
-
-                    var edges = svg.selectAll("line")
-                        .data(edge_news)
-                        .enter()
-                        .append("line")
-                        .style("stroke", "#ccc")
-                        .style("stroke-width", 1);
-
-                    var nodes = svg.selectAll("circle")
-                        .data(nodes_new)
-                        .enter()
-                        .append("circle")
-                        .attr("r", 10)
-                        .style("fill", function(d, i) {
-                            return colors(i);
-                        })
-                        .call(force.drag);
-
-
-                    /*
-                    edges.attr("x1", function(d) { return d.source.x; })
-                        .attr("y1", function(d) { return d.source.y; })
-                        .attr("x2", function(d) { return d.target.x; })
-                        .attr("y2", function(d) { return d.target.y; });
-
-                    nodes.attr("cx", function(d) { return d.x; })
-                        .attr("cy", function(d) { return d.y; });
-
-                    force.start();
-                    */
-                    
-
-                 
-
-
+                   
                 });
 
 
+                
 
-
-                /*
-                function restart() {
-                    node = node.data(nodes);
-
-                    node.enter().insert("circle", ".cursor")
-                        .attr("class", "node")
-                        .attr("r", 5)
-                        .on("mousedown", mousedownNode);
-
-                    node.exit()
-                        .remove();
-
-                    link = link.data(links);
-
-                    link.enter().insert("line", ".node")
-                        .attr("class", "link");
-                    link.exit()
-                        .remove();
-
-                    force.start();
-                }
-
-                */
+                
         </script>
 
     </body>
