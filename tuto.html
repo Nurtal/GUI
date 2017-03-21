@@ -5,6 +5,7 @@
         <script type="text/javascript" src="d3.v3.min.js"></script>
         <script type="text/javascript" src="jquery-3.2.0.min.js"></script>
         <script type="text/javascript" src="underscore-min.js"></script>
+        <script type="text/javascript" src="require.js"></script>
     </head>
 
     <style>
@@ -21,18 +22,18 @@
 
         </svg>
 
-
         <script type="text/javascript">
             alert("This is Tutorial");
-
+           
             
 
+            
 
             //Width and height
             var w = 500;
             var h = 300;
 
-
+            
             var dataset = {
             nodes: [
                 { name: "Adam" },
@@ -62,7 +63,8 @@
                 { source: 8, target: 9 }
             ]
             };
-
+            
+            
 
             var force = d3.layout.force()
                      .nodes(dataset.nodes)
@@ -179,6 +181,30 @@
                 
 
                 
+        </script>
+        <script type="text/javascript">
+            /*
+            var nodes_from_json = [];
+            var edges_from_json = [];
+            $.getJSON( "data.json", function( data ) {
+
+                  $.each(data, function( key, val ) {
+                    if(key == "nodes"){
+                        val.forEach(function(entry){
+                            nodes_from_json.push(entry);
+                        });
+                    }
+
+                    if(key == "edges"){
+                        val.forEach(function(entry){
+                            edges_from_json.push(entry);
+                        })
+                    }
+
+                  });
+            });
+            */
+
         </script>
 
     </body>
