@@ -25,15 +25,167 @@
         <script type="text/javascript">
             alert("This is Tutorial");
            
-            
+
+            /************************\
+            | fp - tree construction |
+            \************************/
 
             
+            //initial cohorte
+            var cohorte = [
+                        ["f", "a", "c", "d", "g", "i", "m", "p"],
+                        ["a", "b", "c", "f", "l", "m", "o"],
+                        ["b", "f", "h", "j", "o"],
+                        ["b", "c", "k", "s", "p"],
+                        ["a", "f", "c", "e", "l", "p", "m", "n"]];
+
+            
+            function getSortedKeys(obj) {
+                var keys = []; for(var key in obj) keys.push(key);
+                return keys.sort(function(a,b){return obj[b]-obj[a]});
+            }
+
+            process_cohorte = function(input_cohorte) {
+                
+                // Get the number of apparition for each item
+                // in the cohorte
+                var scalar_to_count = {};
+                input_cohorte.forEach(function(vector){
+                    vector.forEach(function(scalar){
+
+                        // Create key list
+                        var key_list = [];
+                        for(key in scalar_to_count){
+                            key_list.push(key);
+                        }
+
+                        // check if scalar is in key list
+                        var scalar_in_dict = false;
+                        for(element in key_list){
+                            if(scalar == key_list[element]){
+                                scalar_in_dict = true;
+                            }
+                        }
+
+                        // Count item apparition
+                        if(scalar_in_dict){
+                            var val = scalar_to_count[scalar];
+                            val = val+1;
+                            scalar_to_count[scalar] = val;
+                        }else{
+                            scalar_to_count[scalar] = 1;
+                        }
+    
+                    });
+
+                });
+
+                // Filter the cohorte
+                var min_support = 3;
+                var cohorte_filtered = [];
+
+                input_cohorte.forEach(function(vector){
+                    vector_filtered = [];
+                    vector.forEach(function(scalar){
+
+                        // add only frequent item
+                        support = scalar_to_count[scalar]
+                        if(support >= min_support){
+                            vector_filtered.push(scalar);
+                        }
+                        
+
+                    });
+
+                    // add new vector to new cohorte
+                    cohorte_filtered.push(vector_filtered);
+
+                });
+
+
+                // Reorder the cohorte
+                var cohorte_ordered = [];
+
+                cohorte_filtered.forEach(function(vector){
+                    var vector_ordered = [];
+                    var list_of_scalar_to_order = [];
+                    var list_of_frequence = [];
+                    
+                    var vector_in_count = {};
+
+                    vector.forEach(function(scalar){
+                        list_of_scalar_to_order.push(scalar);
+                        list_of_frequence.push(scalar_to_count[scalar]);
+                        vector_in_count[scalar] = scalar_to_count[scalar];
+                    });
+
+                    // sort vector (first part)
+                    vector_ordered = getSortedKeys(vector_in_count);
+                    
+                    // add new vector to new cohorte
+                    cohorte_ordered.push(vector_ordered);
+
+                });
+                
+
+                // Final check on reordered cohorte
+                var cohorte_sorted = [];
+                var all_ordered = getSortedKeys(scalar_to_count);
+                cohorte_filtered.forEach(function(vector){
+                    var vector_sorted = [];
+                    var scalar_to_position = {};
+                    for(scalar in vector){
+                        for(element in all_ordered){
+                            if(vector[scalar] == all_ordered[element]){
+                                scalar_to_position[vector[scalar]] = element;
+                            }
+                        }
+                    }
+
+                    vector_sorted = getSortedKeys(scalar_to_position);
+                    vector_sorted = vector_sorted.reverse();
+
+                    // add new vector to new cohorte
+                    cohorte_sorted.push(vector_sorted);
+
+                });
+
+                
+                return cohorte_sorted;
+
+            };
+
+
+            cohorte_sorted = process_cohorte(cohorte);
+
+
+
+
+
+
+            init_fptree = function(input_cohorte) {
+
+                var dataset = {
+                    nodes: [{ name: "root" }],
+                    edges: []
+                };
+
+                return dataset;
+
+            }
+
+
+
+
 
             //Width and height
-            var w = 500;
-            var h = 300;
+            var w = 900;
+            var h = 900;
 
-            
+            var dataset = init_fptree();
+
+
+            /*
             var dataset = {
             nodes: [
                 { name: "Adam" },
@@ -63,9 +215,9 @@
                 { source: 8, target: 9 }
             ]
             };
+            */
             
             
-
             var force = d3.layout.force()
                      .nodes(dataset.nodes)
                      .links(dataset.edges)
@@ -105,7 +257,7 @@
                 .call(force.drag);
 
 
-            var update = function () {
+            update = function () {
 
                 // update force field
                 force.nodes(dataset.nodes);
@@ -163,15 +315,48 @@
 
 
 
+
+
+
+            // Fp-tree construction
+            insert_tree = function (input_cohorte, dataset) {
+
+                input_cohorte.forEach(function(vector){
+                    vector.forEach(function(scalar){
+                        var nodes = dataset.nodes;
+
+                        if(nodes.length == 1){
+
+                            dataset.nodes.push({"name":scalar, "branch":1});
+                            dataset.edges.push({source:0, target:1});
+
+                        }
+                
+
+                    });
+                });
+
+                return dataset;
+            }
+
+
+
+
+
+
             d3.select("circle")
                 .on("click", function() {
                     //Do something mundane and annoying on click
-                    alert(" Tadam");
                     
+                    /*
+                    alert(" Tadam");
                     dataset.nodes.push({"name": "test"});
                     dataset.nodes.push({"name": "test2"});
                     dataset.edges.push({ source: 0, target: 11 });
+                    */
 
+
+                    dataset = insert_tree(cohorte_sorted, dataset);
                     update();
 
                    
