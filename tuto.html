@@ -320,8 +320,91 @@
 
             // Fp-tree construction
             insert_tree = function (input_cohorte, dataset) {
-
+            	var nodes_added = [];
+            	var node_id = 1;
                 input_cohorte.forEach(function(vector){
+
+                	var nodes = dataset.nodes;
+                	var node_added_in_current_branch = [];
+                	nodes.forEach(function(node){
+
+
+                		for(element in vector){
+
+
+                			if(vector[element] == node.name){
+
+                				// Le graphe contient le noeud
+
+
+                			}else{
+
+                				// Le graphe ne contient pas le noeud de l'item
+                				// qui nous interesse
+
+                				// si il s'agit du premier item du pattern frequent
+                				// on creer un noeud directement depuis root
+                				if(element == 0){
+
+                					// on verifie que le noeud nexiste pas deja
+                					if(nodes_added.includes(vector[element])){
+
+                					// ajout du noeud & creation du lien
+                					}else{
+                						dataset.nodes.push({"name":vector[element], "branch":1, "id":node_id});
+                            			dataset.edges.push({source:0, target:node_id});
+                            			nodes_added.push(vector[element]); // peut poser pb plus tard
+                            			node_id = node_id + 1;
+
+                					}
+
+                				}else{
+
+                					// Le graphe ne contient pas le noeud de l'item
+                					// qui nous interesse
+                					// le noeud en question is not premier item du pattern
+
+
+                					// si le noeud a ete ajoute au graphe (restreint au vector en cours)
+                					if(node_added_in_current_branch.includes(vector[element])){
+
+                					// si le noeud na pas encore ete ajoute au graphe:
+                					}else{
+
+                						// on ajoute le noeud relier a litem precedent du pattern
+                						dataset.nodes.push({"name":vector[element], "branch":1, "id":node_id});
+                            			
+                            			var source_name = vector[element-1];
+                            			var source_id = -1;
+                            			nodes.forEach(function(node){
+                            				if(node.name == source_name){
+                            					source_id = node.id;
+                            				}
+                            			});
+                            			
+
+                            			node_added_in_current_branch.push(vector[element]);
+                            			dataset.edges.push({source:source_id, target:node_id});
+
+
+
+
+                					}
+
+                					
+                				}
+                				
+
+                			}
+
+
+                		}
+                		
+
+                	});
+
+
+                	/*
                     vector.forEach(function(scalar){
                         var nodes = dataset.nodes;
 
@@ -334,6 +417,7 @@
                 
 
                     });
+                    */
                 });
 
                 return dataset;
