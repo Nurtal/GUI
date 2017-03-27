@@ -254,7 +254,11 @@
                 .style(function(d, i) {
                     return colors(i);
                 })
+                .on("click", function() { 
+                    alert("tardis"); 
+                })
                 .call(force.drag);
+                
 
 
             update = function () {
@@ -274,7 +278,9 @@
                 new_nodes
                     .attr("class", "node")
                     .attr("r", 10)
+                    .on("click", function() { alert("tardis"); })
                     .call(force.drag);
+                    
                 
                 //update edges
                 var new_edges = svg.selectAll("line").data(dataset.edges);
@@ -367,6 +373,8 @@
 
                 					// si le noeud a ete ajoute au graphe (restreint au vector en cours)
                 					if(node_added_in_current_branch.includes(vector[element])){
+
+                                        alert(vector[element])
 
                 					// si le noeud na pas encore ete ajoute au graphe:
                 					}else{
