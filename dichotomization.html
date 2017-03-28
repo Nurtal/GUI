@@ -1,0 +1,42 @@
+<html>
+
+	<head>
+		<title>Dichotomization Results</title>
+		<script type="text/javascript" src="d3-collection.v1.min.js"></script>
+		<script type="text/javascript" src="d3-dispatch.v1.min.js"></script>
+		<script type="text/javascript" src="d3-dsv.v1.min.js"></script>
+		<script type="text/javascript" src="d3-request.v1.min.js"></script>
+	</head>
+
+	<style>
+	</style>
+
+
+	<body>
+
+		<script type="text/javascript">
+
+		var scsv = d3.dsvFormat(";");
+
+
+		d3.request("data/test.log")
+  			.mimeType("text/plain")
+  			.response(function(xhr) { return scsv.parse(xhr.responseText) })
+  			.get(function(data) {
+    			//console.log("semi-column-delimited data:")
+    			//console.log(data[1]);
+
+    		
+
+  		});
+
+
+
+
+
+		</script>
+
+
+	</body>
+
+</html>
