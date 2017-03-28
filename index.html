@@ -1,149 +1,569 @@
-<!DOCTYPE html>
-<meta charset="utf-8">
-<style>
+<html lang="fr">
+    <head>
+        <meta charset="utf-8">
+        <title>D3 Test</title>
+        <script type="text/javascript" src="d3.v3.min.js"></script>
+        <script type="text/javascript" src="jquery-3.2.0.min.js"></script>
+        <script type="text/javascript" src="underscore-min.js"></script>
+        <script type="text/javascript" src="require.js"></script>
+    </head>
 
-.link {
-  fill: none;
-  stroke: #666;
-  stroke-width: 1.5px;
-}
+    <style>
+    circle:hover {
+                fill: green;
+            }
+    </style>
+    <body>
 
-#licensing {
-  fill: green;
-}
+        <svg width="500" height="50">
+        
+            <circle cx="25" cy="25" r="22" fill="yellow" stroke="orange" stroke-width="5"/>
 
-.link.licensing {
-  stroke: green;
-}
 
-.link.resolved {
-  stroke-dasharray: 0,2 1;
-}
+        </svg>
 
-circle {
-  fill: #ccc;
-  stroke: #333;
-  stroke-width: 1.5px;
-}
+        <script type="text/javascript">
+           
 
-text {
-  font: 10px sans-serif;
-  pointer-events: none;
-  text-shadow: 0 1px 0 #fff, 1px 0 0 #fff, 0 -1px 0 #fff, -1px 0 0 #fff;
-}
+            /************************\
+            | fp - tree construction |
+            \************************/
 
-</style>
-<body>
-<script src="d3.v3.min.js"></script>
-<script>
+            
+            //initial cohorte
+            var cohorte = [
+                        ["f", "a", "c", "d", "g", "i", "m", "p"],
+                        ["a", "b", "c", "f", "l", "m", "o"],
+                        ["b", "f", "h", "j", "o"],
+                        ["b", "c", "k", "s", "p"],
+                        ["a", "f", "c", "e", "l", "p", "m", "n"]];
 
-alert("machin");
+            
+            function getSortedKeys(obj) {
+                var keys = []; for(var key in obj) keys.push(key);
+                return keys.sort(function(a,b){return obj[b]-obj[a]});
+            }
 
-// http://blog.thomsonreuters.com/index.php/mobile-patent-suits-graphic-of-the-day/
-var links = [
-  {source: "Microsoft", target: "Amazon", type: "licensing"},
-  {source: "Microsoft", target: "HTC", type: "licensing"},
-  {source: "Samsung", target: "Apple", type: "suit"},
-  {source: "Motorola", target: "Apple", type: "suit"},
-  {source: "Nokia", target: "Apple", type: "resolved"},
-  {source: "HTC", target: "Apple", type: "suit"},
-  {source: "Kodak", target: "Apple", type: "suit"},
-  {source: "Microsoft", target: "Barnes & Noble", type: "suit"},
-  {source: "Microsoft", target: "Foxconn", type: "suit"},
-  {source: "Oracle", target: "Google", type: "suit"},
-  {source: "Apple", target: "HTC", type: "suit"},
-  {source: "Microsoft", target: "Inventec", type: "suit"},
-  {source: "Samsung", target: "Kodak", type: "resolved"},
-  {source: "LG", target: "Kodak", type: "resolved"},
-  {source: "RIM", target: "Kodak", type: "suit"},
-  {source: "Sony", target: "LG", type: "suit"},
-  {source: "Kodak", target: "LG", type: "resolved"},
-  {source: "Apple", target: "Nokia", type: "resolved"},
-  {source: "Qualcomm", target: "Nokia", type: "resolved"},
-  {source: "Apple", target: "Motorola", type: "suit"},
-  {source: "Microsoft", target: "Motorola", type: "suit"},
-  {source: "Motorola", target: "Microsoft", type: "suit"},
-  {source: "Huawei", target: "ZTE", type: "suit"},
-  {source: "Ericsson", target: "ZTE", type: "suit"},
-  {source: "Kodak", target: "Samsung", type: "resolved"},
-  {source: "Apple", target: "Samsung", type: "suit"},
-  {source: "Kodak", target: "RIM", type: "suit"},
-  {source: "Nokia", target: "Qualcomm", type: "suit"}
-];
+            process_cohorte = function(input_cohorte) {
+                
+                // Get the number of apparition for each item
+                // in the cohorte
+                var scalar_to_count = {};
+                input_cohorte.forEach(function(vector){
+                    vector.forEach(function(scalar){
 
-var nodes = {};
+                        // Create key list
+                        var key_list = [];
+                        for(key in scalar_to_count){
+                            key_list.push(key);
+                        }
 
-// Compute the distinct nodes from the links.
-links.forEach(function(link) {
-  link.source = nodes[link.source] || (nodes[link.source] = {name: link.source});
-  link.target = nodes[link.target] || (nodes[link.target] = {name: link.target});
-});
+                        // check if scalar is in key list
+                        var scalar_in_dict = false;
+                        for(element in key_list){
+                            if(scalar == key_list[element]){
+                                scalar_in_dict = true;
+                            }
+                        }
 
-var width = 960,
-    height = 500;
+                        // Count item apparition
+                        if(scalar_in_dict){
+                            var val = scalar_to_count[scalar];
+                            val = val+1;
+                            scalar_to_count[scalar] = val;
+                        }else{
+                            scalar_to_count[scalar] = 1;
+                        }
+    
+                    });
 
-var force = d3.layout.force()
-    .nodes(d3.values(nodes))
-    .links(links)
-    .size([width, height])
-    .linkDistance(60)
-    .charge(-300)
-    .on("tick", tick)
-    .start();
+                });
 
-var svg = d3.select("body").append("svg")
-    .attr("width", width)
-    .attr("height", height);
+                // Filter the cohorte
+                var min_support = 3;
+                var cohorte_filtered = [];
 
-// Per-type markers, as they don't inherit styles.
-svg.append("defs").selectAll("marker")
-    .data(["suit", "licensing", "resolved"])
-  .enter().append("marker")
-    .attr("id", function(d) { return d; })
-    .attr("viewBox", "0 -5 10 10")
-    .attr("refX", 15)
-    .attr("refY", -1.5)
-    .attr("markerWidth", 6)
-    .attr("markerHeight", 6)
-    .attr("orient", "auto")
-  .append("path")
-    .attr("d", "M0,-5L10,0L0,5");
+                input_cohorte.forEach(function(vector){
+                    vector_filtered = [];
+                    vector.forEach(function(scalar){
 
-var path = svg.append("g").selectAll("path")
-    .data(force.links())
-  .enter().append("path")
-    .attr("class", function(d) { return "link " + d.type; })
-    .attr("marker-end", function(d) { return "url(#" + d.type + ")"; });
+                        // add only frequent item
+                        support = scalar_to_count[scalar]
+                        if(support >= min_support){
+                            vector_filtered.push(scalar);
+                        }
+                        
 
-var circle = svg.append("g").selectAll("circle")
-    .data(force.nodes())
-  .enter().append("circle")
-    .attr("r", 6)
-    .call(force.drag);
+                    });
 
-var text = svg.append("g").selectAll("text")
-    .data(force.nodes())
-  .enter().append("text")
-    .attr("x", 8)
-    .attr("y", ".31em")
-    .text(function(d) { return d.name; });
+                    // add new vector to new cohorte
+                    cohorte_filtered.push(vector_filtered);
 
-// Use elliptical arc path segments to doubly-encode directionality.
-function tick() {
-  path.attr("d", linkArc);
-  circle.attr("transform", transform);
-  text.attr("transform", transform);
-}
+                });
 
-function linkArc(d) {
-  var dx = d.target.x - d.source.x,
-      dy = d.target.y - d.source.y,
-      dr = Math.sqrt(dx * dx + dy * dy);
-  return "M" + d.source.x + "," + d.source.y + "A" + dr + "," + dr + " 0 0,1 " + d.target.x + "," + d.target.y;
-}
 
-function transform(d) {
-  return "translate(" + d.x + "," + d.y + ")";
-}
+                // Reorder the cohorte
+                var cohorte_ordered = [];
 
-</script>
+                cohorte_filtered.forEach(function(vector){
+                    var vector_ordered = [];
+                    var list_of_scalar_to_order = [];
+                    var list_of_frequence = [];
+                    
+                    var vector_in_count = {};
+
+                    vector.forEach(function(scalar){
+                        list_of_scalar_to_order.push(scalar);
+                        list_of_frequence.push(scalar_to_count[scalar]);
+                        vector_in_count[scalar] = scalar_to_count[scalar];
+                    });
+
+                    // sort vector (first part)
+                    vector_ordered = getSortedKeys(vector_in_count);
+                    
+                    // add new vector to new cohorte
+                    cohorte_ordered.push(vector_ordered);
+
+                });
+                
+
+                // Final check on reordered cohorte
+                var cohorte_sorted = [];
+                var all_ordered = getSortedKeys(scalar_to_count);
+                cohorte_filtered.forEach(function(vector){
+                    var vector_sorted = [];
+                    var scalar_to_position = {};
+                    for(scalar in vector){
+                        for(element in all_ordered){
+                            if(vector[scalar] == all_ordered[element]){
+                                scalar_to_position[vector[scalar]] = element;
+                            }
+                        }
+                    }
+
+                    vector_sorted = getSortedKeys(scalar_to_position);
+                    vector_sorted = vector_sorted.reverse();
+
+                    // add new vector to new cohorte
+                    cohorte_sorted.push(vector_sorted);
+
+                });
+
+                
+                return cohorte_sorted;
+
+            };
+
+
+            cohorte_sorted = process_cohorte(cohorte);
+
+
+
+
+
+
+            init_fptree = function(input_cohorte) {
+
+                var dataset = {
+                    nodes: [{ name: "root", id: 0 }],
+                    edges: []
+                };
+
+                return dataset;
+
+            }
+
+
+            function sleep(millis){
+                var date = new Date();
+                var curDate = null;
+                do { curDate = new Date(); }
+                while(curDate-date < millis);
+            }
+
+
+
+            //Width and height
+            var w = 900;
+            var h = 900;
+
+            var dataset = init_fptree();
+
+
+            /*
+            var dataset = {
+            nodes: [
+                { name: "Adam" },
+                { name: "Bob" },
+                { name: "Carrie" },
+                { name: "Donovan" },
+                { name: "Edward" },
+                { name: "Felicity" },
+                { name: "George" },
+                { name: "Hannah" },
+                { name: "Iris" },
+                { name: "Jerry" }
+            ],
+            edges: [
+                { source: 0, target: 1 },
+                { source: 0, target: 2 },
+                { source: 0, target: 3 },
+                { source: 0, target: 4 },
+                { source: 1, target: 5 },
+                { source: 2, target: 5 },
+                { source: 2, target: 5 },
+                { source: 3, target: 4 },
+                { source: 5, target: 8 },
+                { source: 5, target: 9 },
+                { source: 6, target: 7 },
+                { source: 7, target: 8 },
+                { source: 8, target: 9 }
+            ]
+            };
+            */
+            
+            
+            var force = d3.layout.force()
+                     .nodes(dataset.nodes)
+                     .links(dataset.edges)
+                     .size([w, h])
+                     .linkDistance([50])        // <-- New!
+                     .charge([-100])            // <-- New!
+                     .start();
+
+
+            var colors = d3.scale.category10();
+
+            //Create SVG element
+            var svg = d3.select("body")
+                        .append("svg")
+                        .attr("width", w)
+                        .attr("height", h);
+            
+
+
+            var edges = svg.selectAll("line")
+                .data(dataset.edges)
+                .enter()
+                .append("line")
+                .style("stroke", "#ccc")
+                .style("stroke-width", 1);
+
+
+            var nodes = svg.selectAll("circle")
+                .attr("class", "node")
+                .data(dataset.nodes)
+                .enter()
+                .append("circle")
+                .attr("r", 10)
+                .style(function(d, i) {
+                    return colors(i);
+                })
+                .on("click", function(d) { 
+                    alert(d.name +"|"+d.id+"|"+d.branch); 
+                })
+                .call(force.drag);
+                
+
+
+            update = function (dataset) {
+
+                // update force field
+                force.nodes(dataset.nodes);
+                force.links(dataset.edges);
+                force.linkDistance([50]);
+                force.charge([-100]);
+                force.size([w, h]);
+                force.start();
+
+                // update nodes
+                var new_nodes = svg.selectAll("circle").data(dataset.nodes);
+                new_nodes.enter().append("circle");
+                new_nodes.exit().remove();
+                new_nodes
+                    .attr("class", "node")
+                    .attr("r", 10)
+                    .attr("fill", (function(d) { if(d.name == "root"){return "red";}else{return "blue";} }) )
+                    .on("click", function(d) { alert(d.name +"|"+d.id+"|"+d.branch); })
+                    .call(force.drag);
+                    
+                
+                //update edges
+                var new_edges = svg.selectAll("line").data(dataset.edges);
+                new_edges.enter().append("line");
+                new_edges.exit().remove();
+                new_edges
+                    .style("stroke", "#ccc")
+                    .style("stroke-width", 1);
+
+
+                // update coordinates
+                force.on("tick", function() {
+
+                    new_edges.attr("x1", function(d) { return d.source.x; })
+                        .attr("y1", function(d) { return d.source.y; })
+                        .attr("x2", function(d) { return d.target.x; })
+                        .attr("y2", function(d) { return d.target.y; });
+
+                    new_nodes.attr("cx", function(d) { return d.x; })
+                        .attr("cy", function(d) { return d.y; });
+
+                });
+
+            };
+
+
+            force.on("tick", function() {
+
+            edges.attr("x1", function(d) { return d.source.x; })
+                .attr("y1", function(d) { return d.source.y; })
+                .attr("x2", function(d) { return d.target.x; })
+                .attr("y2", function(d) { return d.target.y; });
+
+            nodes.attr("cx", function(d) { return d.x; })
+                .attr("cy", function(d) { return d.y; });
+
+            });
+
+
+
+
+
+
+            // Fp-tree construction
+            insert_tree = function (input_cohorte, dataset) {
+            	var nodes_added = [];
+                var branch_root = [];
+            	var node_id = 1;
+                var branch_id = 1;
+                var branch_in_construction = 0;
+                var prefix_list = [];
+                var prefix = [];
+                var node_to_id = {};
+                var branch_to_content = {};
+                input_cohorte.forEach(function(vector){
+
+                	var nodes = dataset.nodes;
+                	var node_added_in_current_branch = [];
+                	var current_branch = 0;
+
+                		for(element in vector){
+
+                            if(element == 0){
+                                if(branch_root.includes(vector[element])){
+
+                                    // il existe un node racine dune branche tel que
+                                    // debut du vector = le node
+
+                                    // Recuperation du numero de la branche qui contient le vector
+                                    for(root in branch_root){
+                                        if(branch_root[root] == vector[element]){
+                                            current_branch = parseInt(root) + 1;
+                                        }
+                                    }
+
+                                }else{
+                                    // aucune branche a pour racine le premier element du vector
+                                    // ajout du node
+                                    current_branch = branch_id;
+                                    branch_to_content[current_branch] = [];
+                                    dataset.nodes.push({"name":vector[element], "branch":branch_id, "id":node_id, "count":1});
+                                    branch_to_content[current_branch].push({"name":vector[element], "branch":current_branch, "id":node_id, "count":1});
+                                    
+                                    dataset.edges.push({source:0, target:node_id, "branch":branch_id});
+                                    nodes_added.push(vector[element]); // peut poser pb plus tard
+                                    node_to_id[node_id] = vector[element];
+                                    node_id = node_id + 1;
+                                    branch_id = branch_id + 1;
+                                    branch_root.push(vector[element]);
+                                    branch_in_construction = 1;        
+
+                                }
+
+
+                            }else{
+                                // on ne traite pas le premier element dy vector
+
+                                if(nodes_added.includes(vector[element])){
+                                    // node deja present dans le graphe
+
+                                    if(branch_in_construction){
+                                        dataset.nodes.push({"name":vector[element], "branch":current_branch, "id":node_id, "count":1});
+                                        branch_to_content[current_branch].push({"name":vector[element], "branch":current_branch, "id":node_id, "count":1});
+                                        node_to_id[node_id] = vector[element];
+
+                                        var source_name = vector[element-1];
+                                        var source_id = -1;
+                                        var nodes_in_branch = branch_to_content[current_branch];
+                                        
+                                        nodes_in_branch.forEach(function(node){
+                                            if(node.name == source_name){
+                                                source_id = node.id;
+                                            }
+                                        });
+                                        
+
+                                        node_added_in_current_branch.push(vector[element]);
+                                        nodes_added.push(vector[element]);
+                                        
+                                        dataset.edges.push({source:source_id, target:node_id, "branch":current_branch});
+                                        
+                                        node_id = node_id + 1;
+
+                                        if(element == vector.length - 1){
+                                            branch_in_construction = 0;
+                                        }
+
+                                    }else{
+
+
+                                        // pas en train de construire une nouvelle branche et node deja present
+                                        // dans le graphe, cas particulier dextension
+
+                                        // Recuperation des edges contenu dans la branche
+                                        var edge = dataset.edges;
+                                        var edges_in_current_branch = [];
+                                        edge.forEach(function(edge){
+                                            if(edge.branch == current_branch){
+                                                edges_in_current_branch.push(edge);
+                                            }
+                                        });
+
+                                        // Verifier si il existe un edge tel que vector
+                                        // belong to branche
+
+                                        var link_exist = false;
+                                        for(link in edges_in_current_branch){
+                                            var edge = edges_in_current_branch[link];
+
+                                            var edge_source = node_to_id[edge.source];
+                                            var edge_target = node_to_id[edge.target];
+
+
+
+                                            var source = vector[element-1]
+                                            var target = vector[element]
+
+                                            if(edge_source == source && edge_target == target){
+                                                link_exist = true;
+                                            }
+                                        }
+
+                                        if(!link_exist){
+
+                                            dataset.nodes.push({"name":vector[element], "branch":current_branch, "id":node_id, "count":1});
+                                            branch_to_content[current_branch].push({"name":vector[element], "branch":current_branch, "id":node_id, "count":1});
+                                            node_to_id[node_id] = vector[element];
+                                            var source_name = vector[element-1];
+                                            var source_id = -1;
+                                            var nodes_in_branch = branch_to_content[current_branch];
+                                            
+                                            nodes_in_branch.forEach(function(node){
+                                                if(node.name == source_name){
+                                                    source_id = node.id;
+                                                }
+                                            });
+                                            
+                                            node_added_in_current_branch.push(vector[element]);
+                                            nodes_added.push(vector[element]);
+                                            dataset.edges.push({source:source_id, target:node_id, "branch":current_branch});
+                                            node_id = node_id + 1;
+                                        }   
+                                    }
+
+                                }else{
+
+                                    // Le graphe ne contient pas le noeud de l'item
+                                    // qui nous interesse
+                                    // le noeud en question is not premier item du pattern
+
+
+                                    // si le noeud a ete ajoute au graphe (restreint au vector en cours)
+                                    if(node_added_in_current_branch.includes(vector[element])){
+
+
+                                    // si le noeud na pas encore ete ajoute au graphe:
+                                    }else{
+
+                                        // on ajoute le noeud relier a litem precedent du pattern
+                                        dataset.nodes.push({"name":vector[element], "branch":current_branch, "id":node_id, "count":1});
+                                        branch_to_content[current_branch].push({"name":vector[element], "branch":current_branch, "id":node_id, "count":1});
+                                        node_to_id[node_id] = vector[element];
+                                        var source_name = vector[element-1];
+                                        var source_id = -1;
+                                        var nodes_in_branch = branch_to_content[current_branch];
+                                        
+                                        nodes_in_branch.forEach(function(node){
+                                            if(node.name == source_name){
+                                                source_id = node.id;
+                                            }
+                                        });
+                                        
+                                        node_added_in_current_branch.push(vector[element]);
+                                        nodes_added.push(vector[element]);
+                                        dataset.edges.push({source:source_id, target:node_id, "branch":current_branch});
+                                        node_id = node_id + 1;
+
+                                        if(element == vector.length - 1){
+                                            branch_in_construction = 0;
+                                        }
+
+                                    }
+
+                                }
+
+                            }
+                		}
+                });
+
+                return dataset;
+            }
+
+
+
+
+
+
+            d3.select("circle")
+                .on("click", function() {
+
+
+
+                    dataset = insert_tree(cohorte_sorted, dataset);
+                    update(dataset);
+
+                   
+                });
+
+
+                
+
+                
+        </script>
+        <script type="text/javascript">
+            /*
+            var nodes_from_json = [];
+            var edges_from_json = [];
+            $.getJSON( "data.json", function( data ) {
+
+                  $.each(data, function( key, val ) {
+                    if(key == "nodes"){
+                        val.forEach(function(entry){
+                            nodes_from_json.push(entry);
+                        });
+                    }
+
+                    if(key == "edges"){
+                        val.forEach(function(entry){
+                            edges_from_json.push(entry);
+                        })
+                    }
+
+                  });
+            });
+            */
+
+        </script>
+
+    </body>
+</html>
