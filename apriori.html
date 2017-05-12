@@ -1,0 +1,170 @@
+<html lang="fr">
+    <head>
+        <meta charset="utf-8">
+        <title>D3 Test</title>
+        <script type="text/javascript" src="d3.v3.min.js"></script>
+        <script type="text/javascript" src="jquery-3.2.0.min.js"></script>
+        <script type="text/javascript" src="underscore-min.js"></script>
+        <script type="text/javascript" src="require.js"></script>
+    </head>
+
+    <style>
+    circle:hover {
+                fill: green;
+            }
+    </style>
+    <body>
+
+        <svg width="700" height="50">
+        
+            <circle cx="25" cy="25" r="15" fill="yellow" stroke="orange" stroke-width="5"/>
+            <circle cx="85" cy="25" r="15" fill="blue" stroke="orange" stroke-width="5"/>
+            <circle cx="145" cy="25" r="15" fill="brown" stroke="orange" stroke-width="5"/>
+            <circle cx="205" cy="25" r="15" fill="red" stroke="orange" stroke-width="5"/>
+            <circle cx="265" cy="25" r="15" fill="pink" stroke="orange" stroke-width="5"/>
+            <circle cx="325" cy="25" r="15" fill="grey" stroke="orange" stroke-width="5"/>
+            <circle cx="385" cy="25" r="15" fill="dark" stroke="orange" stroke-width="5"/>
+            <circle cx="445" cy="25" r="15" fill="purple" stroke="orange" stroke-width="5"/>
+            <circle cx="505" cy="25" r="15" fill="cyan" stroke="orange" stroke-width="5"/>
+            <circle cx="565" cy="25" r="15" fill="orange" stroke="orange" stroke-width="5"/>
+
+
+        </svg>
+
+        <script type="text/javascript">
+           
+           //Width and height
+            var w = 900;
+            var h = 900;
+
+            var dataset = {
+            nodes: [
+                { name: "Adam" },
+                { name: "Bob" },
+                { name: "Carrie" },
+                { name: "Donovan" },
+                { name: "Edward" },
+                { name: "Felicity" },
+                { name: "George" },
+                { name: "Hannah" },
+                { name: "Iris" },
+                { name: "Jerry" }
+            ],
+            edges: [
+                { source: 0, target: 1 },
+                { source: 0, target: 2 },
+                { source: 0, target: 3 },
+                { source: 0, target: 4 },
+                { source: 1, target: 5 },
+                { source: 2, target: 5 },
+                { source: 2, target: 5 },
+                { source: 3, target: 4 },
+                { source: 5, target: 8 },
+                { source: 5, target: 9 },
+                { source: 6, target: 7 },
+                { source: 7, target: 8 },
+                { source: 8, target: 9 }
+            ]
+            };
+
+            var force = d3.layout.force()
+                     .nodes(dataset.nodes)
+                     .links(dataset.edges)
+                     .size([w, h])
+                     .linkDistance([50])        // <-- New!
+                     .charge([-100])            // <-- New!
+                     .start();
+
+
+            var colors = d3.scale.category10();
+
+            //Create SVG element
+            var svg = d3.select("body")
+                        .append("svg")
+                        .attr("width", w)
+                        .attr("height", h);
+
+            var edges = svg.selectAll("line")
+                .data(dataset.edges)
+                .enter()
+                .append("line")
+                .style("stroke", "#ccc")
+                .style("stroke-width", 1);
+
+
+            var nodes = svg.selectAll("circle")
+                .attr("class", "node")
+                .data(dataset.nodes)
+                .enter()
+                .append("circle")
+                .attr("r", 10)
+                .style(function(d, i) {
+                    return colors(i);
+                })
+                .call(force.drag);
+
+
+
+                 update = function (dataset) {
+
+                // update force field
+                force.nodes(dataset.nodes);
+                force.links(dataset.edges);
+                force.linkDistance([50]);
+                force.charge([-100]);
+                force.size([w, h]);
+                force.start();
+
+                // update nodes
+                var new_nodes = svg.selectAll("circle").data(dataset.nodes);
+                new_nodes.enter().append("circle");
+                new_nodes.exit().remove();
+                new_nodes
+                    .attr("class", "node")
+                    .attr("r", 10)
+                    .attr("fill", (function(d) { if(d.name == "root"){return "red";}else{return "blue";} }) )
+                    .on("click", function(d) { alert(d.name +"|"+d.id+"|"+d.branch+"|"+d.count); })
+                    .call(force.drag);
+                    
+                
+                //update edges
+                var new_edges = svg.selectAll("line").data(dataset.edges);
+                new_edges.enter().append("line");
+                new_edges.exit().remove();
+                new_edges
+                    .style("stroke", "#ccc")
+                    .style("stroke-width", 1);
+
+
+                // update coordinates
+                force.on("tick", function() {
+
+                    new_edges.attr("x1", function(d) { return d.source.x; })
+                        .attr("y1", function(d) { return d.source.y; })
+                        .attr("x2", function(d) { return d.target.x; })
+                        .attr("y2", function(d) { return d.target.y; });
+
+                    new_nodes.attr("cx", function(d) { return d.x; })
+                        .attr("cy", function(d) { return d.y; });
+
+                });
+
+            };
+
+            force.on("tick", function() {
+
+            edges.attr("x1", function(d) { return d.source.x; })
+                .attr("y1", function(d) { return d.source.y; })
+                .attr("x2", function(d) { return d.target.x; })
+                .attr("y2", function(d) { return d.target.y; });
+
+            nodes.attr("cx", function(d) { return d.x; })
+                .attr("cy", function(d) { return d.y; });
+
+            });
+     
+        </script>
+        
+
+    </body>
+</html>
