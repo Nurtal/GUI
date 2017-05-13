@@ -39,16 +39,16 @@
 
             var dataset = {
             nodes: [
-                { name: "Adam" },
-                { name: "Bob" },
-                { name: "Carrie" },
-                { name: "Donovan" },
-                { name: "Edward" },
-                { name: "Felicity" },
-                { name: "George" },
-                { name: "Hannah" },
-                { name: "Iris" },
-                { name: "Jerry" }
+                { name: "Adam", color: "yellow"},
+                { name: "Bob", color: "blue" },
+                { name: "Carrie", color: "brown" },
+                { name: "Donovan", color: "red" },
+                { name: "Edward", color: "pink" },
+                { name: "Felicity", color: "grey" },
+                { name: "George", color: "dark" },
+                { name: "Hannah", color: "purple" },
+                { name: "Iris", color: "cyan" },
+                { name: "Jerry", color: "orange" }
             ],
             edges: [
                 { source: 0, target: 1 },
@@ -76,7 +76,7 @@
                      .start();
 
 
-            var colors = d3.scale.category10();
+            //var colors = d3.scale.category10();
 
             //Create SVG element
             var svg = d3.select("body")
@@ -98,9 +98,7 @@
                 .enter()
                 .append("circle")
                 .attr("r", 10)
-                .style(function(d, i) {
-                    return colors(i);
-                })
+                .attr("fill", (function(d) { return d.color; }))
                 .call(force.drag);
 
 
