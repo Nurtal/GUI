@@ -13,7 +13,7 @@ nodeToColor = {"node0": "yellow",
 			   "node3": "red",
 			   "node4": "pink",
 			   "node5": "grey",
-			   "node6": "dark",
+			   "node6": "green",
 			   "node7": "purple",
 			   "node8": "cyan",
 			   "node9": "orange"}
